@@ -55,6 +55,11 @@ async def create(request: CreateGameRequest):
         print(f"Creating game with height={request.height}, width={request.width}")
         game.create(request.height, request.width)
         print("Game created successfully")
+        print(f"Game state after creation:")
+        print(f"  Height: {game.height}")
+        print(f"  Width: {game.width}")
+        print(f"  Remaining: {game.remaining}")
+        print(f"  Winner: {game.get_winner()}")
         return {"success": True}
     except Exception as e:
         print(f"Error creating game: {e}")
@@ -183,6 +188,11 @@ async def get_game_state():
     """Get the current game state for the UI"""
     try:
         print("Getting game state...")
+        winner = game.get_winner()
+        print(f"Winner from game.get_winner(): {winner}")
+        print(f"Remaining moves: {game.remaining}")
+        print(f"Game active: {game.remaining > 0}")
+        
         state = {
             "height": game.height,
             "width": game.width,
@@ -190,7 +200,7 @@ async def get_game_state():
             "score_a": game.A,
             "score_b": game.B,
             "remaining_moves": game.remaining,
-            "winner": game.get_winner(),
+            "winner": winner,
             "vertical_lines": game.vertical,
             "horizontal_lines": game.horizontal,
             "inner_squares": game.inner

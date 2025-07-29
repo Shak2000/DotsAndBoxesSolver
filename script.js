@@ -200,7 +200,10 @@ class DotsAndBoxesUI {
             this.gameState.remainingMoves = gameState.remaining_moves;
             this.gameState.winner = gameState.winner;
             
+            console.log('Server game state:', gameState);
             console.log('Updated local game state:', this.gameState);
+            console.log('Winner from server:', gameState.winner);
+            console.log('Remaining moves from server:', gameState.remaining_moves);
             
             // Update vertical lines
             for (let y = 0; y < this.gameState.height - 1; y++) {
@@ -256,9 +259,10 @@ class DotsAndBoxesUI {
 
     async makeMove(x, y, direction) {
         console.log('makeMove called with:', x, y, direction);
+        console.log('Current game state:', this.gameState);
         
-        if (this.gameState.winner) {
-            console.log('Game is over, cannot make move');
+        if (this.gameState.winner && this.gameState.winner !== 'Undecided') {
+            console.log('Game is over, cannot make move. Winner:', this.gameState.winner);
             return;
         }
         
