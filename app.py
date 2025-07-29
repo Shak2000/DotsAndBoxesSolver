@@ -1,9 +1,37 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from main import Game
 
 game = Game()
 app = FastAPI()
+
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class CreateGameRequest(BaseModel):
+    height: int = 4
+    width: int = 4
+
+
+class MoveRequest(BaseModel):
+    x: int
+    y: int
+    direction: str
+
+
+class CheckCompleteRequest(BaseModel):
+    x: int
+    y: int
 
 
 @app.get("/")
@@ -22,80 +50,153 @@ async def get_script():
 
 
 @app.post("/create")
-async def create(height: int = 4, width: int = 4):
-    game.create(height, width)
+async def create(request: CreateGameRequest):
+    try:
+        print(f"Creating game with height={request.height}, width={request.width}")
+        game.create(request.height, request.width)
+        print("Game created successfully")
+        return {"success": True}
+    except Exception as e:
+        print(f"Error creating game: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/switch")
 async def switch():
-    game.switch()
+    try:
+        game.switch()
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/check_if_complete")
-async def check_if_complete(x, y):
-    return game.check_if_complete(x, y)
+async def check_if_complete(request: CheckCompleteRequest):
+    try:
+        result = game.check_if_complete(request.x, request.y)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/check_all_squares")
 async def check_all_squares():
-    game.check_all_squares()
+    try:
+        game.check_all_squares()
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/place_vertical")
-async def place_vertical(x, y):
-    return game.place_vertical(x, y)
+async def place_vertical(request: MoveRequest):
+    try:
+        result = game.place_vertical(request.x, request.y)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/place_horizontal")
-async def place_horizontal(x, y):
-    return game.place_horizontal(x, y)
+async def place_horizontal(request: MoveRequest):
+    try:
+        result = game.place_horizontal(request.x, request.y)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.post("/get_winner")
+@app.get("/get_winner")
 async def get_winner():
-    return game.get_winner()
+    try:
+        winner = game.get_winner()
+        return {"winner": winner}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/undo")
 async def undo():
-    return game.undo()
+    try:
+        result = game.undo()
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/is_valid_vertical_move")
-async def is_valid_vertical_move(x, y):
-    return game.is_valid_vertical_move(x, y)
+async def is_valid_vertical_move(x: int, y: int):
+    try:
+        result = game.is_valid_vertical_move(x, y)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/is_valid_horizontal_move")
-async def is_valid_horizontal_move(x, y):
-    return game.is_valid_horizontal_move(x, y)
+async def is_valid_horizontal_move(x: int, y: int):
+    try:
+        result = game.is_valid_horizontal_move(x, y)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/get_valid_moves")
 async def get_valid_moves():
-    return game.get_valid_moves()
+    try:
+        moves = game.get_valid_moves()
+        return {"moves": moves}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/make_move")
-async def make_move(x, y, direction):
-    return game.make_move(x, y, direction)
+async def make_move(request: MoveRequest):
+    try:
+        result = game.make_move(request.x, request.y, request.direction)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/evaluate_position")
 async def evaluate_position():
-    return game.evaluate_position()
-
-
-@app.get("/copy")
-async def copy():
-    return game.copy()
-
-
-@app.get("/minimax")
-async def minimax(depth, alpha, beta, maximizing):
-    return game.minimax(depth, alpha, beta, maximizing)
+    try:
+        score = game.evaluate_position()
+        return {"score": score}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/get_best_move")
-async def get_best_move(depth):
-    return game.get_best_move(depth)
+async def get_best_move(depth: int):
+    try:
+        best_move = game.get_best_move(depth)
+        return {"best_move": best_move}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/game_state")
+async def get_game_state():
+    """Get the current game state for the UI"""
+    try:
+        print("Getting game state...")
+        state = {
+            "height": game.height,
+            "width": game.width,
+            "current_player": game.player,
+            "score_a": game.A,
+            "score_b": game.B,
+            "remaining_moves": game.remaining,
+            "winner": game.get_winner(),
+            "vertical_lines": game.vertical,
+            "horizontal_lines": game.horizontal,
+            "inner_squares": game.inner
+        }
+        print(f"Game state: {state}")
+        return state
+    except Exception as e:
+        print(f"Error getting game state: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
