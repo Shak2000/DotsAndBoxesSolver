@@ -272,10 +272,17 @@ class DotsAndBoxesUI {
             console.log('Move result:', result);
             
             if (result.result) {
+                // Capture the player who made the move before switching
+                const playerWhoMoved = this.gameState.currentPlayer;
+                
+                // Switch player after successful move
+                console.log('Switching player...');
+                await this.apiCall('/switch', 'POST');
+                
                 // Update game state
                 await this.updateGameState();
                 
-                this.showStatus(`Player ${this.gameState.currentPlayer} placed a ${direction.toLowerCase()} line at (${x}, ${y})`, 'success');
+                this.showStatus(`Player ${playerWhoMoved} placed a ${direction.toLowerCase()} line at (${x}, ${y})`, 'success');
             } else {
                 this.showStatus('Invalid move!', 'error');
             }
@@ -286,9 +293,17 @@ class DotsAndBoxesUI {
     }
 
     async computerMove() {
-        if (this.gameState.winner) return;
+        if (this.gameState.winner && this.gameState.winner !== 'Undecided') {
+            return;
+        }
         
-        const depth = parseInt(document.getElementById('depth').value);
+        const depthEl = document.getElementById('depth');
+        if (!depthEl) {
+            this.showStatus('Depth input not found', 'error');
+            return;
+        }
+        
+        const depth = parseInt(depthEl.value);
         
         try {
             this.setLoading(true);
@@ -296,14 +311,14 @@ class DotsAndBoxesUI {
             
             const response = await this.apiCall('/get_best_move', 'GET', { depth });
             
-            if (response.best_move) {
+            if (response.best_move && response.best_move.length === 3) {
                 const [x, y, direction] = response.best_move;
                 await this.makeMove(x, y, direction);
             } else {
                 this.showStatus('No valid moves available!', 'error');
             }
         } catch (error) {
-            this.showStatus('Computer move failed', 'error');
+            this.showStatus('Computer move failed: ' + error.message, 'error');
         } finally {
             this.setLoading(false);
         }
@@ -420,11 +435,32 @@ class DotsAndBoxesUI {
         if (moveInfo) moveInfo.style.display = 'block';
     }
 
-    restartGame() {
-        this.gameState.gameActive = false;
-        this.gameState.winner = null;
-        this.showSetupOnly();
-        this.showStatus('Game restarted!', 'info');
+    async restartGame() {
+        try {
+            // Get current game dimensions
+            const height = this.gameState.height;
+            const width = this.gameState.width;
+            
+            console.log('Restarting game with dimensions:', height, 'x', width);
+            
+            // Create new game with same dimensions
+            const result = await this.apiCall('/create', 'POST', { height, width });
+            console.log('Restart game result:', result);
+            
+            // Reset local game state
+            this.gameState.currentPlayer = 'A';
+            this.gameState.scoreA = 0;
+            this.gameState.scoreB = 0;
+            this.gameState.winner = null;
+            this.gameState.gameActive = true;
+            
+            // Update the UI
+            await this.updateGameState();
+            this.showStatus('Game restarted with same dimensions!', 'success');
+        } catch (error) {
+            console.error('Restart game error:', error);
+            this.showStatus('Failed to restart game: ' + error.message, 'error');
+        }
     }
 
     quitGame() {
