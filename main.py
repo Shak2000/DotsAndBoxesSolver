@@ -316,8 +316,6 @@ class Game:
             print()
         print()
 
-
-
     def evaluate_position(self):
         """Evaluate the current position for minimax"""
         score = 0
