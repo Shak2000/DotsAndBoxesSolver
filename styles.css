@@ -194,42 +194,52 @@ header h1 {
 
 .horizontal-line {
     width: 60px;
-    height: 4px;
+    height: 12px;
     background: #dee2e6;
     margin: 0 5px;
     cursor: pointer;
     transition: all 0.3s;
-    border-radius: 2px;
+    border-radius: 6px;
     flex-shrink: 0;
 }
 
 .horizontal-line:hover {
     background: #667eea;
-    transform: scaleY(1.5);
+    transform: scaleY(1.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .horizontal-line.filled {
     background: #495057;
 }
 
+.horizontal-line:active {
+    transform: scaleY(0.9);
+}
+
 .vertical-line {
-    width: 4px;
+    width: 12px;
     height: 60px;
     background: #dee2e6;
     margin: 0 15px;
     cursor: pointer;
     transition: all 0.3s;
-    border-radius: 2px;
+    border-radius: 6px;
     flex-shrink: 0;
 }
 
 .vertical-line:hover {
     background: #667eea;
-    transform: scaleX(1.5);
+    transform: scaleX(1.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .vertical-line.filled {
     background: #495057;
+}
+
+.vertical-line:active {
+    transform: scaleX(0.9);
 }
 
 .square {
@@ -307,11 +317,11 @@ header h1 {
     
     .horizontal-line {
         width: 35px;
-        height: 3px;
+        height: 8px;
     }
     
     .vertical-line {
-        width: 3px;
+        width: 8px;
         height: 35px;
     }
     

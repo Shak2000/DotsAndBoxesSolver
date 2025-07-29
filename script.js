@@ -89,8 +89,11 @@ class DotsAndBoxesUI {
             this.gameState.winner = null;
             this.gameState.gameActive = true;
             
+            console.log('Generating board...');
             this.generateBoard();
+            console.log('Board generated, updating game state...');
             await this.updateGameState();
+            console.log('Game state updated, showing UI...');
             this.showGameUI();
             this.showStatus('New game created!', 'success');
         } catch (error) {
@@ -113,6 +116,8 @@ class DotsAndBoxesUI {
         this.boardElements.squares = [];
         
         // Generate board rows - alternating pattern
+        console.log('Generating board with dimensions:', this.gameState.height, 'x', this.gameState.width);
+        
         for (let y = 0; y < this.gameState.height; y++) {
             // Row with dots and horizontal lines
             const dotRow = document.createElement('div');
@@ -130,9 +135,15 @@ class DotsAndBoxesUI {
                     hLine.className = 'horizontal-line';
                     hLine.dataset.x = x;
                     hLine.dataset.y = y;
-                    hLine.addEventListener('click', () => this.makeMove(x, y, 'H'));
+                    hLine.addEventListener('click', (e) => {
+                        console.log('Horizontal line clicked at:', x, y);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.makeMove(x, y, 'H');
+                    });
                     dotRow.appendChild(hLine);
                     this.boardElements.horizontal.push(hLine);
+                    console.log('Created horizontal line at:', x, y);
                 }
             }
             boardContainer.appendChild(dotRow);
@@ -148,9 +159,15 @@ class DotsAndBoxesUI {
                     vLine.className = 'vertical-line';
                     vLine.dataset.x = x;
                     vLine.dataset.y = y;
-                    vLine.addEventListener('click', () => this.makeMove(x, y, 'V'));
+                    vLine.addEventListener('click', (e) => {
+                        console.log('Vertical line clicked at:', x, y);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.makeMove(x, y, 'V');
+                    });
                     lineRow.appendChild(vLine);
                     this.boardElements.vertical.push(vLine);
+                    console.log('Created vertical line at:', x, y);
                     
                     // Add square (except for last column)
                     if (x < this.gameState.width - 1) {
@@ -238,10 +255,17 @@ class DotsAndBoxesUI {
     }
 
     async makeMove(x, y, direction) {
-        if (this.gameState.winner) return;
+        console.log('makeMove called with:', x, y, direction);
+        
+        if (this.gameState.winner) {
+            console.log('Game is over, cannot make move');
+            return;
+        }
         
         try {
+            console.log('Making API call for move...');
             const result = await this.apiCall('/make_move', 'POST', { x, y, direction });
+            console.log('Move result:', result);
             
             if (result.result) {
                 // Update game state
@@ -252,7 +276,8 @@ class DotsAndBoxesUI {
                 this.showStatus('Invalid move!', 'error');
             }
         } catch (error) {
-            this.showStatus('Failed to make move', 'error');
+            console.error('Move failed:', error);
+            this.showStatus('Failed to make move: ' + error.message, 'error');
         }
     }
 
